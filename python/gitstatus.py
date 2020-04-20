@@ -206,13 +206,12 @@ def collect_information(lines):
     """
     head_file, stash_file, merge_file, rebase_dir = git_paths(find_git_root())
     branch, upstream, local = parse_branch(lines[0], head_file)
-    remote = parse_ahead_behind(lines[0])
+    ahead_behind = parse_ahead_behind(lines[0])
     stats = parse_stats(lines[1:])
     stashes = stash_count(stash_file)
     merge = PREFIX + "MERGING " + str(int(os.path.isfile(merge_file)))
     rebase = rebase_progress(rebase_dir)
-
-    props = [PREFIX + "IS_REPOSITORY 1", branch, ] + remote + stats + [stashes, local, upstream, merge, rebase]
+    props = [PREFIX + "IS_REPOSITORY 1", branch, ] + ahead_behind + stats + [stashes, local, upstream, merge, rebase]
     values = [str(x) for x in props]
     return values
 

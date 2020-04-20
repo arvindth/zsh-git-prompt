@@ -40,7 +40,7 @@ update_current_git_vars() {
     unset REPO_IS_REPOSITORY
 
     # find which command to use
-    GIT_PROMPT_EXECUTABLE=${GIT_PROMPT_EXECUTABLE:-"python"}
+    GIT_PROMPT_EXECUTABLE=${GIT_PROMPT_EXECUTABLE:-"shell"}
     if [ "$GIT_PROMPT_EXECUTABLE" = "python" ]; then
         local py_bin=${ZSH_GIT_PROMPT_PYBIN:-"python"}
         __GIT_STATUS_CMD() {
@@ -60,7 +60,7 @@ update_current_git_vars() {
     local var
     for var in IS_REPOSITORY BRANCH AHEAD BEHIND \
             STAGED CHANGED CONFLICTS UNTRACKED STASHED \
-            LOCAL_ONLY UPSTREAM MERGING REBASE BISECT; do
+            LOCAL_ONLY UPSTREAM MERGING REBASE BISECT REMOTE; do
         unset REPO_$var
     done
 
@@ -96,10 +96,7 @@ repo_check() {
 repo_check_not() {
     local content=""
     local cmd="content=\"\$REPO_$1\""
-    echo "$cmd" >> /tmp/zp.log
     eval $cmd
-    echo "$cmd" >> /tmp/zp.log
-    echo "HERE: $content" >> /tmp/zp.log
     [ -n "$content" ] && [ "$content" = "0" ]
 }
 
@@ -134,6 +131,15 @@ git_build_status() {
         local STATUS=""
         add_color_reset
         add_theme_var PREFIX
+
+        if [[ "$ZSH_GIT_PROMPT_SHOW_REMOTE" -gt "0" ]] && [ -n "$REPO_REMOTE" ] && [ "$REPO_UPSTREAM" != "" ]; then
+            add_theme_var REMOTE_FRONT
+            add_repo_var REMOTE
+            add_theme_var REMOTE_END
+            add_color_reset
+            STATUS="$STATUS$ZSH_THEME_GIT_PROMPT_SEPARATOR"
+        fi
+
         add_theme_var BRANCH
         add_repo_var BRANCH
         add_color_reset
@@ -142,7 +148,7 @@ git_build_status() {
         repo_info_with_check MERGING
         repo_info_with_check BISECT
 
-        if repo_check LOCAL_ONLY; then
+        if repo_check LOCAL_ONLY && [[ -z "$ZSH_GIT_PROMPT_SHOW_REMOTE" ]]; then
             add_theme_var LOCAL
             add_color_reset
         elif [[ "$ZSH_GIT_PROMPT_SHOW_UPSTREAM" -gt "0" ]] && [ -n "$REPO_UPSTREAM" ] && [ "$REPO_UPSTREAM" != ".." ]; then
@@ -227,10 +233,12 @@ add-zsh-hook precmd precmd_update_git_vars
 
 # Default values for the appearance of the prompt.
 # The theme is identical to magicmonty/bash-git-prompt
-ZSH_THEME_GIT_PROMPT_PREFIX="["
-ZSH_THEME_GIT_PROMPT_SUFFIX="]"
+ZSH_THEME_GIT_PROMPT_PREFIX="("
+ZSH_THEME_GIT_PROMPT_SUFFIX=")"
 ZSH_THEME_GIT_PROMPT_HASH_PREFIX=":"
 ZSH_THEME_GIT_PROMPT_SEPARATOR="|"
+ZSH_THEME_GIT_PROMPT_REMOTE_FRONT="%{$fg[cyan]%}"
+ZSH_THEME_GIT_PROMPT_REMOTE_END="%{${reset_color}%}"
 ZSH_THEME_GIT_PROMPT_BRANCH="%{$fg_bold[magenta]%}"
 ZSH_THEME_GIT_PROMPT_STAGED="%{$fg[red]%}%{●%G%}"
 ZSH_THEME_GIT_PROMPT_CONFLICTS="%{$fg[red]%}%{✖%G%}"

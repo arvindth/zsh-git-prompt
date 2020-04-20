@@ -88,6 +88,7 @@ EOF
     fi
 
     local stashed=$(git stash list | wc -l | sed 's/^ *//')
+    local remote=$(git config --get remote.${upstream%%/*}.url | sed -E 's/^git@github.com:|.git$//g')
 
     echo "${PREFIX}IS_REPOSITORY 1"
     echo "${PREFIX}BRANCH $branch"
@@ -99,6 +100,7 @@ EOF
 
     echo "${PREFIX}STASHED $stashed"
 
+    echo "${PREFIX}REMOTE $remote"
     if [ -n "$upstream" ]; then
         local_only=0
     fi
